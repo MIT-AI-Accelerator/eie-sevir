@@ -1,5 +1,5 @@
 import sys
-import matplolib as mpl
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 

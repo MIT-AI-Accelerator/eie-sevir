@@ -40,8 +40,12 @@ class SEVIRSequence(Sequence):
                  start_date=None,
                  end_date=None,
                  unwrap_time=False,
-                 sevir_data_home=DEFAULT_DATA_HOME
+                 sevir_data_home=DEFAULT_DATA_HOME,
+                 shuffle=False,
+                 shuffle_seed=1
                  ):
+        self._samples = None
+        self._hdf_files = {}
         self.x_img_types = x_img_types
         self.y_img_types = y_img_types
         if isinstance(catalog,(str,)):
@@ -55,6 +59,8 @@ class SEVIRSequence(Sequence):
         self.end_date=end_date
         self.unwrap_time = unwrap_time
         self.sevir_data_home=sevir_data_home
+        self.shuffle=shuffle
+        self.shuffle_seed=shuffle_seed
         
         if self.start_date:
             self.catalog = self.catalog[self.catalog.time_utc > self.start_date ]
@@ -62,9 +68,6 @@ class SEVIRSequence(Sequence):
             self.catalog = self.catalog[self.catalog.time_utc <= self.end_date]
         if self.datetime_filter:
             self.catalog = self.catalog[self.datetime_filter(self.catalog.time_utc)]
-
-        self._samples = None
-        self._hdf_files = {}
 
         self._compute_samples()
         self._open_files()
@@ -138,6 +141,9 @@ class SEVIRSequence(Sequence):
         # If there are repeated IDs, remove them (this is a bug in SEVIR)
         filtcat = filtcat.groupby('id').filter(lambda x: x.shape[0]==len(imgt))
         self._samples = filtcat.groupby('id').apply( lambda df: self._df_to_series(df,imgt) )
+        if self.shuffle:
+            self._samples=self._samples.sample(frac=1,random_state=self.shuffle_seed)
+        
 
     def _df_to_series(self,df,imgt):
         N_FRAMES=49  # TODO:  don't hardcode this
@@ -169,5 +175,7 @@ class SEVIRSequence(Sequence):
             print('Opening HDF5 file for reading',f)
             self._hdf_files[f] = h5py.File(self.sevir_data_home+'/'+f,'r')
 
-    
+    def on_epoch_end(self):
+        if self.shuffle:
+            df.sample(frac=1,random_state=self.shuffle)
 
