@@ -1,4 +1,4 @@
 data/*
 __pycache__
 sample_images/*
-.ipynb_checkpoints/*
+.ipynb_checkpoints*
