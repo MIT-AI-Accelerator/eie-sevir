@@ -114,6 +114,7 @@ class SEVIRSequence(Sequence):
         self.batch_size=batch_size
 
         self.datetime_filter=datetime_filter
+        self.catalog_filter=catalog_filter
         self.start_date=start_date
         self.end_date=end_date
         self.unwrap_time = unwrap_time
