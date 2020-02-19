@@ -14,6 +14,9 @@ def get_cmap(type):
     elif type.lower()=='ir069':
         cmap,norm=c09_cmap()
         vmin,vmax=-80,-10
+    elif type.lower()=='lght':
+        cmap,norm='hot',None
+        vmin,vmax=0,5
     else:
         cmap,norm='jet',None
         vmin,vmax=-70,20
