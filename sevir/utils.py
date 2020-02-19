@@ -179,7 +179,12 @@ class SEVIRSequence(Sequence):
         for t in imgtyps:
             fname = row[f'{t}_filename']
             idx   = row[f'{t}_index']
-            t_slice = row[f'{t}_time_index'] if self.unwrap_time else slice(0,None)
+            #t_slice = row[f'{t}_time_index'] if self.unwrap_time else slice(0,None)
+            if self.unwrap_time:
+                tidx=row[f'{t}_time_index']
+                t_slice = slice(tidx,tidx+1) 
+            else:
+                t_slice = slice(0,None)
             # Need to bin lght counts into grid
             if t=='lght':
                 lght_data = self._hdf_files[fname][idx][:]
@@ -196,7 +201,7 @@ class SEVIRSequence(Sequence):
         Converts Nx5 lightning data matrix into a 2D grid of pixel counts
         """
         #out_size = (48,48,len(FRAME_TIMES)-1) if isinstance(t_slice,(slice,)) else (48,48)
-        out_size = (48,48,len(FRAME_TIMES)) if isinstance(t_slice,(slice,)) else (48,48)
+        out_size = (48,48,len(FRAME_TIMES)) if t_slice.stop is None else (48,48,1)
         if data.shape[0]==0:
             return np.zeros((1,)+out_size,dtype=np.float32)
         
@@ -209,11 +214,12 @@ class SEVIRSequence(Sequence):
         
         # Filter/separate times
         t=data[:,0]
-        if not isinstance(t_slice,(slice,)):  # select only one time bin
-            if t_slice>0:
-                tm=np.logical_and( (t>=FRAME_TIMES[t_slice-1],t<FRAME_TIMES[t_slice]) )
+        if t_slice.stop is not None:  # select only one time bin
+            if t_slice.stop>0:
+                tm=np.logical_and( t>=FRAME_TIMES[t_slice.stop-1],
+                                   t< FRAME_TIMES[t_slice.stop] )
             else: # special case:  frame 0 uses lght from frame 1
-                tm=np.logical_and( (t>=FRAME_TIMES[0],t<FRAME_TIMES[1]) )
+                tm=np.logical_and( t>=FRAME_TIMES[0],t<FRAME_TIMES[1] )
             #tm=np.logical_and( (t>=FRAME_TIMES[t_slice],t<FRAME_TIMES[t_slice+1]) )
       
             data=data[tm,:]
