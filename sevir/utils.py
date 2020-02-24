@@ -44,7 +44,9 @@ class SEVIRSequence(Sequence):
     catalog  str
        Name of SEVIR catalog CSV file.  
     batch_size  int
-       batch size to generate.  
+       batch size to generate
+    n_batch_per_epoch  int or None
+       Number of batches in an epoch.  Set to None to match available data
     start_date   datetime
        Start time of SEVIR samples to generate   
     end_date    datetime
@@ -63,6 +65,14 @@ class SEVIRSequence(Sequence):
        If True, data samples are shuffled before each epoch
     shuffle_seed   int
        Seed to use for shuffling
+    output_type  np.dtype
+       dtype of generated tensors
+    normalize_x  list of tuple
+       list the same size as x_img_types containing tuples (scale,offset) used to 
+       normalize data via   X  -->  (X-offset)*scale.  If None, no scaling is done
+    normalize_y  list of tuple
+       list the same size as y_img_types containing tuples (scale,offset) used to 
+       normalize data via   X  -->  (X-offset)*scale
     
     Returns
     -------
@@ -94,6 +104,7 @@ class SEVIRSequence(Sequence):
                  y_img_types=None, 
                  catalog=DEFAULT_CATALOG,
                  batch_size = 3,
+                 n_batch_per_epoch=None,
                  start_date=None,
                  end_date=None,
                  datetime_filter=None,
@@ -101,7 +112,10 @@ class SEVIRSequence(Sequence):
                  unwrap_time=False,
                  sevir_data_home=DEFAULT_DATA_HOME,
                  shuffle=False,
-                 shuffle_seed=1
+                 shuffle_seed=1,
+                 output_type=np.float32,
+                 normalize_x=None,
+                 normalize_y=None
                  ):
         self._samples = None
         self._hdf_files = {}
@@ -112,6 +126,7 @@ class SEVIRSequence(Sequence):
         else:
             self.catalog=catalog
         self.batch_size=batch_size
+        self.n_batch_per_epoch = n_batch_per_epoch
 
         self.datetime_filter=datetime_filter
         self.catalog_filter=catalog_filter
@@ -120,8 +135,15 @@ class SEVIRSequence(Sequence):
         self.unwrap_time = unwrap_time
         self.sevir_data_home=sevir_data_home
         self.shuffle=shuffle
-        self.shuffle_seed=shuffle_seed
-        
+        self.shuffle_seed=int(shuffle_seed)
+        self.output_type=output_type
+        self.normalize_x = normalize_x
+        self.normalize_y = normalize_y
+        if normalize_x:
+            assert(len(normalize_x)==len(x_img_types))
+        if normalize_y:
+            assert(len(normalize_y)==len(y_img_types))
+
         if self.start_date:
             self.catalog = self.catalog[self.catalog.time_utc > self.start_date ]
         if self.end_date:
@@ -131,9 +153,74 @@ class SEVIRSequence(Sequence):
         
         if self.catalog_filter:
             self.catalog = self.catalog[self.catalog_filter(self.catalog)]
-
+        
         self._compute_samples()
         self._open_files()
+    
+    def load_batches(self,
+                     n_batches=10,
+                     offset=0,
+                     progress_bar=False):
+        """
+        Loads a selected number of batches into memory.  This returns the concatenated
+        result of [self.__getitem__(i+offset) for i in range(n_batches)]
+
+        WARNING:  Be careful about running out enough memory!
+
+        Parameters
+        ----------
+        n_batches   int
+            Number of batches to load.   Set to -1 to load them all, but becareful
+            not to run out of memory
+        offset int
+            batch offset to apply
+        progress_bar  bool
+            Show a progress bar during loading (requires tqdm module)
+
+
+        """
+        if progress_bar:
+            try:
+                from tqdm import tqdm as RW
+            except ImportError:
+                print('You need to install tqdm to use progress bar')
+                RW=list
+        
+        n_batches = self.__len__() if n_batches==-1 else n_batches
+        n_batches = min(n_batches,self.__len__())
+        assert(n_batches>0)
+
+        if self.y_img_types is None: # one output
+            X = None
+            for i in RW( range(offset,offset+n_batches) ):
+                Xi = self.__getitem__(i % n_batches)
+                if X is not None:
+                    X = [np.concatenate( (xx,xxi),axis=0 ) for xx,xxi in zip(X,Xi)]
+                else:
+                    X = Xi
+            return X
+        else:
+            X,Y=None,None
+            for i in RW( range(offset,offset+n_batches) ):
+                Xi,Yi = self.__getitem__(i)
+                if X is not None:
+                    X = [np.concatenate( (xx,xxi),axis=0 ) for xx,xxi in zip(X,Xi)]
+                    Y = [np.concatenate( (yy,yyi),axis=0 ) for yy,yyi in zip(Y,Yi)]
+                else:
+                    X = Xi
+                    Y = Yi
+            return X,Y
+
+    def on_epoch_end(self):
+        if self.shuffle:
+            self._samples.sample(frac=1,random_state=self.shuffle_seed)
+    
+    def close(self):
+        """
+        Closes all open file handles
+        """
+        for f in self._hdf_files:
+            self._hdf_files[f].close()
 
     def __del__(self):
         for f,hf in self._hdf_files.items():
@@ -141,15 +228,18 @@ class SEVIRSequence(Sequence):
 
     def __len__(self):
         """
-        How many batches are present
+        How many batches to generate per epoch
         """
         #return int(np.ceil(len(self.x) / float(self.batch_size)))
         if self._samples is not None:
-            return int(np.ceil(self._samples.shape[0] / float(self.batch_size)))
+            max_n = int(np.ceil(self._samples.shape[0] / float(self.batch_size)))
         else:
-            return 0
+            max_n = 0
+        if self.n_batch_per_epoch is not None:
+            return min(self.n_batch_per_epoch,max_n)
+        else:
+            return max_n
         
-
     def __getitem__(self, idx):
         """
         batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
@@ -163,11 +253,18 @@ class SEVIRSequence(Sequence):
         data = {}
         for index, row in batch.iterrows():
             data = self._read_data(row,data)
-        if self.y_img_types is None:
-            return [data[t] for t in self.x_img_types]
+        X = [data[t].astype(self.output_type) for t in self.x_img_types]
+        if self.normalize_x:
+            X = [SEVIRSequence.normalize(X[k],s) for k,s in enumerate(self.normalize_x)]
+
+        if self.y_img_types is not None:
+            Y = [data[t].astype(self.output_type) for t in self.y_img_types]
+            if self.normalize_y:
+                Y = [SEVIRSequence.normalize(Y[k],s) for k,s in enumerate(self.normalize_y)]
+            return X,Y
         else:
-            return [data[t] for t in self.x_img_types],[data[t] for t in self.y_img_types]
-    
+            return X    
+        
     def _get_batch_samples(self,idx):
         return self._samples.iloc[idx * self.batch_size:(idx + 1) * self.batch_size]
     
@@ -289,20 +386,26 @@ class SEVIRSequence(Sequence):
             print('Opening HDF5 file for reading',f)
             self._hdf_files[f] = h5py.File(self.sevir_data_home+'/'+f,'r')
 
-    def on_epoch_end(self):
-        if self.shuffle:
-            df.sample(frac=1,random_state=self.shuffle)
     
-    def close(self):
-        """
-        Closes all open file handles
-        """
-        for f in self._hdf_files:
-            self._hdf_files[f].close()
     
     @staticmethod
     def get_types():
         return TYPES
+    
+    @staticmethod
+    def normalize(X,s):
+        """
+        Normalized data using s = (scale,offset) via Z = (X-offset)*scale
+        """
+        return (X-s[1])*s[0]
+
+    @staticmethod
+    def unnormalize(Z,s):
+        """
+        Reverses the normalization performed in a SEVIRSequence generator
+        given s=(scale,offset)
+        """
+        return Z/s[0]+s[1]
     
     
  
