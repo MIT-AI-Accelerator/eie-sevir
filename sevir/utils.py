@@ -115,7 +115,8 @@ class SEVIRSequence(Sequence):
                  shuffle_seed=1,
                  output_type=np.float32,
                  normalize_x=None,
-                 normalize_y=None
+                 normalize_y=None,
+                 verbose=False
                  ):
         self._samples = None
         self._hdf_files = {}
@@ -139,6 +140,7 @@ class SEVIRSequence(Sequence):
         self.output_type=output_type
         self.normalize_x = normalize_x
         self.normalize_y = normalize_y
+        self.verbose=verbose
         if normalize_x:
             assert(len(normalize_x)==len(x_img_types))
         if normalize_y:
@@ -155,7 +157,7 @@ class SEVIRSequence(Sequence):
             self.catalog = self.catalog[self.catalog_filter(self.catalog)]
         
         self._compute_samples()
-        self._open_files()
+        self._open_files(verbose=self.verbose)
     
     def load_batches(self,
                      n_batches=10,
@@ -165,7 +167,7 @@ class SEVIRSequence(Sequence):
         Loads a selected number of batches into memory.  This returns the concatenated
         result of [self.__getitem__(i+offset) for i in range(n_batches)]
 
-        WARNING:  Be careful about running out enough memory!
+        WARNING:  Be careful about running out of memory.
 
         Parameters
         ----------
@@ -221,6 +223,7 @@ class SEVIRSequence(Sequence):
         """
         for f in self._hdf_files:
             self._hdf_files[f].close()
+        self._hdf_files={}
 
     def __del__(self):
         for f,hf in self._hdf_files.items():
@@ -371,7 +374,7 @@ class SEVIRSequence(Sequence):
                    
         return pd.DataFrame(d)
 
-    def _open_files(self):
+    def _open_files(self,verbose=True):
         """
         Opens HDF files
         """
@@ -383,10 +386,22 @@ class SEVIRSequence(Sequence):
             hdf_filenames += list(np.unique( self._samples[f'{t}_filename'].values ))
         self._hdf_files = {}
         for f in hdf_filenames:
-            print('Opening HDF5 file for reading',f)
+            if verbose:
+                print('Opening HDF5 file for reading',f)
             self._hdf_files[f] = h5py.File(self.sevir_data_home+'/'+f,'r')
 
+    def save(self,filename):
+        """
+        Saves generator to a file for easier reloading
+        """
+        self.close()
+        pickle.dump(open(filename,'wb'))
+        self._open_files(verbose=False)
     
+    @staticmethod
+    def load(filename):
+        gen = pickle.load(open(filename,'rb'))
+        gen._open_files()
     
     @staticmethod
     def get_types():
