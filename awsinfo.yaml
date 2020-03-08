@@ -15,7 +15,7 @@ Tags:
   - Geostationary lightning mapper
 License: There are no restrictions on the use of this data.
 Resources:
-  - Description: Dataset of storm imagry 
+  - Description: Dataset of storm imagery 
     ARN: arn:aws:s3:::sevir
     Region: us-east-1
     Type: S3 Bucket
