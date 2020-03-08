@@ -19,15 +19,15 @@ Resources:
     ARN: arn:aws:s3:::sevir
     Region: us-east-1
     Type: S3 Bucket
+DataAtWork:
+  Tutorials:
+    - Title: Generating SEVIR data
+      URL: https://github.com/MIT-AI-Accelerator/eie-sevir/blob/master/examples/Generators.ipynb
+      AuthorName: Mark Veillette
+      AuthorURL: https://github.com/markveillette
   Tools & Applications:
     - Title: sevir -- python utilities for working with SEVIR dataset
       URL: https://github.com/MIT-AI-Accelerator/eie-sevir
       AuthorName: Mark Veillette
       AuthorURL: https://github.com/markveillette
-  Publications:
-    - Title: Seasonal abundance and survival of North America’s migratory avifauna determined by weather radar
-      URL: https://www.nature.com/articles/s41559-018-0666-4
-      AuthorName: Adriaan M. Dokter, Andrew Farnsworth, Daniel Fink, Viviana Ruiz-Gutierrez, Wesley M. Hochachka, Frank A. La Sorte, Orin J. Robinson, Kenneth V. Rosenberg & Steve Kelling
-    - Title: Unlocking the Potential of NEXRAD Data through NOAA’s Big Data Partnership
-      URL: https://journals.ametsoc.org/doi/full/10.1175/BAMS-D-16-0021.1
-      AuthorName: Steve Ansari and Stephen Del Greco
+  
