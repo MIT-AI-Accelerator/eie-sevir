@@ -22,7 +22,7 @@ Resources:
 DataAtWork:
   Tutorials:
     - Title: Generating SEVIR data
-      URL: https://github.com/MIT-AI-Accelerator/eie-sevir/blob/master/examples/Generators.ipynb
+      URL: https://nbviewer.jupyter.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Tutorial.ipynb
       AuthorName: Mark Veillette
       AuthorURL: https://github.com/markveillette
   Tools & Applications:
