@@ -1,0 +1,33 @@
+Name: Storm EVent ImageRy (SEVIR)
+Description: Collection of spatially and temporally aligned GOES-16 ABI satellite imagry, NEXRAD radar mosaics, and GOES-16 GLM lightning detections.  
+Documentation: https://sevir.mit.edu/sevir-details
+Contact: mark.veillette@mit.edu
+ManagedBy: "[MIT](http://www.noaa.gov/)"
+UpdateFrequency: New events will be added to SEVIR yearly
+Tags:
+  - GOES-16
+  - Strom events
+  - nexrad
+  - weather
+  - meteorological
+  - severe weather
+  - Advanced baseline imager
+  - Geostationary lightning mapper
+License: There are no restrictions on the use of this data.
+Resources:
+  - Description: Dataset of storm imagery 
+    ARN: arn:aws:s3:::sevir
+    Region: us-east-1
+    Type: S3 Bucket
+DataAtWork:
+  Tutorials:
+    - Title: Generating SEVIR data
+      URL: https://github.com/MIT-AI-Accelerator/eie-sevir/blob/master/examples/Generators.ipynb
+      AuthorName: Mark Veillette
+      AuthorURL: https://github.com/markveillette
+  Tools & Applications:
+    - Title: sevir -- python utilities for working with SEVIR dataset
+      URL: https://github.com/MIT-AI-Accelerator/eie-sevir
+      AuthorName: Mark Veillette
+      AuthorURL: https://github.com/markveillette
+  
