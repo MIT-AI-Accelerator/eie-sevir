@@ -2,7 +2,7 @@ Name: Storm EVent ImageRy (SEVIR)
 Description: Collection of spatially and temporally aligned GOES-16 ABI satellite imagry, NEXRAD radar mosaics, and GOES-16 GLM lightning detections.  
 Documentation: https://sevir.mit.edu/sevir-details
 Contact: mark.veillette@mit.edu
-ManagedBy: "[MIT](http://www.noaa.gov/)"
+ManagedBy: Mark S. Veillette
 UpdateFrequency: New events will be added to SEVIR yearly
 Tags:
   - GOES-16
