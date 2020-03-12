@@ -13,7 +13,7 @@ Tags:
   - severe weather
   - Advanced baseline imager
   - Geostationary lightning mapper
-License: There are no restrictions on the use of this data.
+License: TBD
 Resources:
   - Description: Dataset of storm imagery 
     ARN: arn:aws:s3:::sevir
