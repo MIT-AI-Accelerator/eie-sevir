@@ -21,8 +21,16 @@ Resources:
     Type: S3 Bucket
 DataAtWork:
   Tutorials:
-    - Title: Generating SEVIR data
+    - Title: Introduction to SEVIR
       URL: https://nbviewer.jupyter.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Tutorial.ipynb
+      AuthorName: Mark Veillette
+      AuthorURL: https://github.com/markveillette
+    - Title: Using Generators for SEVIR data
+      URL: https://nbviewer.jupyter.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/Generators.ipynb
+      AuthorName: Mark Veillette
+      AuthorURL: https://github.com/markveillette
+    - Title: Example ML Application using SEVIR
+      URL: https://nbviewer.jupyter.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Example_ML_Application.ipynb
       AuthorName: Mark Veillette
       AuthorURL: https://github.com/markveillette
   Tools & Applications:

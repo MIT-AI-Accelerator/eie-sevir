@@ -16,8 +16,10 @@ from tensorflow.keras.utils import GeneratorEnqueuer
 # List all avaialbe types
 TYPES    = ['vis','ir069','ir107','vil','lght']
 
-DEFAULT_CATALOG = '/home/gridsan/groups/EarthIntelligence/datasets/SEVIR/CATALOG.csv'
-DEFAULT_DATA_HOME = '/home/gridsan/groups/EarthIntelligence/datasets/SEVIR/data/'
+import pathlib
+_thisdir = str(pathlib.Path(__file__).parent.absolute())
+DEFAULT_CATALOG   = _thisdir+'/../CATALOG.csv'
+DEFAULT_DATA_HOME = _thisdir+'/../data'
 
 # Nominal Frame time offsets in minutes (used for non-raster types)
 
@@ -25,7 +27,6 @@ DEFAULT_DATA_HOME = '/home/gridsan/groups/EarthIntelligence/datasets/SEVIR/data/
 # the frame's time EXCEPT for the first frame, which will use the same flashes as the second frame
 #  (This will be corrected in a future version of SEVIR so that all frames are consistent)
 FRAME_TIMES = np.arange(-120.0,120.0,5) * 60 # in seconds
-#FRAME_TIMES = np.arange(-122.5,127.5,5) * 60 # in seconds  # Alternative def?
 
 class SEVIRSequence(Sequence):
     """
@@ -178,7 +179,6 @@ class SEVIRSequence(Sequence):
             batch offset to apply
         progress_bar  bool
             Show a progress bar during loading (requires tqdm module)
-
 
         """
         if progress_bar:
