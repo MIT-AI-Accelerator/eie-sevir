@@ -1,5 +1,5 @@
 Name: Storm EVent ImageRy (SEVIR)
-Description: Collection of spatially and temporally aligned GOES-16 ABI satellite imagry, NEXRAD radar mosaics, and GOES-16 GLM lightning detections.  
+Description: Collection of spatially and temporally aligned GOES-16 ABI satellite imagery, NEXRAD radar mosaics, and GOES-16 GLM lightning detections.  
 Documentation: https://sevir.mit.edu/sevir-details
 Contact: mark.veillette@mit.edu
 ManagedBy: Mark S. Veillette
@@ -13,7 +13,7 @@ Tags:
   - severe weather
   - Advanced baseline imager
   - Geostationary lightning mapper
-License: TBD
+License: There are no restrictions on the use of this data.
 Resources:
   - Description: Dataset of storm imagery 
     ARN: arn:aws:s3:::sevir
