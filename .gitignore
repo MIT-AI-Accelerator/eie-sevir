@@ -3,3 +3,5 @@ __pycache__
 sample_images/*
 .ipynb_checkpoints*
 old/
+*.h5
+*.log-*

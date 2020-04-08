@@ -1,30 +1,31 @@
 import sys
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
 
-def get_cmap(type):
+def get_cmap(type,encoded=True):
     if type.lower()=='vis':
-        cmap,norm = vis_cmap()
-        vmin,vmax=None,None
+        cmap,norm = vis_cmap(encoded)
+        vmin,vmax=(0,10000) if encoded else (0,1)
     elif type.lower()=='vil':
-        cmap,norm=vil_cmap()
+        cmap,norm=vil_cmap(encoded)
         vmin,vmax=None,None
     elif type.lower()=='ir069':
-        cmap,norm=c09_cmap()
-        vmin,vmax=-80,-10
+        cmap,norm=c09_cmap(encoded)
+        vmin,vmax=(-8000,-1000) if encoded else (-80,-10)
     elif type.lower()=='lght':
         cmap,norm='hot',None
         vmin,vmax=0,5
     else:
         cmap,norm='jet',None
-        vmin,vmax=-70,20
+        vmin,vmax=(-7000,2000) if encoded else (-70,20)
 
     return cmap,norm,vmin,vmax
 
 
-def vil_cmap():
+def vil_cmap(encoded=True):
     cols=[   [0,0,0],
              [0.30196078431372547, 0.30196078431372547, 0.30196078431372547],
              [0.1568627450980392,  0.7450980392156863,  0.1568627450980392],
@@ -37,6 +38,7 @@ def vil_cmap():
              [0.6274509803921569,  0.0, 0.0],
              [0.9058823529411765,  0.0, 1.0]]
     lev = [0.0, 16.0, 31.0, 59.0, 74.0, 100.0, 133.0, 160.0, 181.0, 219.0, 255.0]
+    #TODO:  encoded=False
     nil = cols.pop(0)
     under = cols[0]
     over = cols.pop()
@@ -48,7 +50,7 @@ def vil_cmap():
     return cmap,norm
        
     
-def vis_cmap():
+def vis_cmap(encoded=True):
     cols=[[0,0,0],
              [0.0392156862745098, 0.0392156862745098, 0.0392156862745098],
              [0.0784313725490196, 0.0784313725490196, 0.0784313725490196],
@@ -76,9 +78,11 @@ def vis_cmap():
              [0.9411764705882353, 0.9411764705882353, 0.9411764705882353],
              [0.9803921568627451, 0.9803921568627451, 0.9803921568627451],
              [0.9803921568627451, 0.9803921568627451, 0.9803921568627451]]
-    lev=[0.  , 0.02, 0.04, 0.06, 0.08, 0.1 , 0.12, 0.14, 0.16, 0.2 , 0.24,
+    lev=np.array([0.  , 0.02, 0.04, 0.06, 0.08, 0.1 , 0.12, 0.14, 0.16, 0.2 , 0.24,
        0.28, 0.32, 0.36, 0.4 , 0.44, 0.48, 0.52, 0.56, 0.6 , 0.64, 0.68,
-       0.72, 0.76, 0.8 , 0.9 , 1.  ]
+       0.72, 0.76, 0.8 , 0.9 , 1.  ])
+    if encoded:
+        lev*=1e4
     nil = cols.pop(0)
     under = cols[0]
     over = cols.pop()
@@ -90,7 +94,7 @@ def vis_cmap():
     return cmap,norm
 
 
-def ir_cmap():
+def ir_cmap(encoded=True):
     cols=[[0,0,0],[1.0, 1.0, 1.0],
      [0.9803921568627451, 0.9803921568627451, 0.9803921568627451],
      [0.9411764705882353, 0.9411764705882353, 0.9411764705882353],
@@ -118,10 +122,12 @@ def ir_cmap():
      [0.0784313725490196, 0.0784313725490196, 0.0784313725490196],
      [0.0392156862745098, 0.0392156862745098, 0.0392156862745098],
      [0.0, 0.803921568627451, 0.803921568627451]]
-    lev=[-110. , -105.2,  -95.2,  -85.2,  -75.2,  -65.2,  -55.2,  -45.2,
+    lev=np.array([-110. , -105.2,  -95.2,  -85.2,  -75.2,  -65.2,  -55.2,  -45.2,
         -35.2,  -28.2,  -23.2,  -18.2,  -13.2,   -8.2,   -3.2,    1.8,
           6.8,   11.8,   16.8,   21.8,   26.8,   31.8,   36.8,   41.8,
-         46.8,   51.8,   90. ,  100. ]
+         46.8,   51.8,   90. ,  100. ])
+    if encoded:
+        lev*=1e2
     nil = cols.pop(0)
     under = cols[0]
     over = cols.pop()
@@ -133,7 +139,7 @@ def ir_cmap():
     return cmap,norm         
 
 
-def c09_cmap():
+def c09_cmap(encoded=True):
     cols=[
     [1.000000, 0.000000, 0.000000],
     [1.000000, 0.031373, 0.000000],
