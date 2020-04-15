@@ -3,7 +3,7 @@ Welcome! The Storm EVent ImagRy (SEVIR) dataset is a collection of temporally an
 
 The dataset contains thousands of samples of 4 hour events captures by one or more weather sensors.  This image shows one such event:
 
-![SEVIR Sample](examples/animation.gif)
+![SEVIR Sample](https://github.com/MIT-AI-Accelerator/eie-sevir/blob/master/examples/tutorial_img/sevir_sample.gif)
 
 This repo contains some code and examples for working with the SEVIR dataset.  
 
