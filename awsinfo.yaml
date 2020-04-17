@@ -5,14 +5,10 @@ Contact: mark.veillette@mit.edu
 ManagedBy: Mark S. Veillette
 UpdateFrequency: New events will be added to SEVIR yearly
 Tags:
-  - GOES-16
-  - Strom events
-  - nexrad
+  - satellite imagery
   - weather
   - meteorological
-  - severe weather
-  - Advanced baseline imager
-  - Geostationary lightning mapper
+  - aws-pds
 License: There are no restrictions on the use of this data.
 Resources:
   - Description: Dataset of storm imagery 
@@ -27,10 +23,6 @@ DataAtWork:
       AuthorURL: https://github.com/markveillette
     - Title: Using Generators for SEVIR data
       URL: https://nbviewer.jupyter.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/Generators.ipynb
-      AuthorName: Mark Veillette
-      AuthorURL: https://github.com/markveillette
-    - Title: Example ML Application using SEVIR
-      URL: https://nbviewer.jupyter.org/github/MIT-AI-Accelerator/eie-sevir/blob/master/examples/SEVIR_Example_ML_Application.ipynb
       AuthorName: Mark Veillette
       AuthorURL: https://github.com/markveillette
   Tools & Applications:
