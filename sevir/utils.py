@@ -187,30 +187,48 @@ class SEVIRSequence(Sequence):
             except ImportError:
                 print('You need to install tqdm to use progress bar')
                 RW=list
+        else:
+            RW=list
         
         n_batches = self.__len__() if n_batches==-1 else n_batches
         n_batches = min(n_batches,self.__len__())
         assert(n_batches>0)
-
+        
+        def out_shape(n_batches,shp):
+            """
+            Computes shape for preinitialization
+            """
+            if n_batches<self.__len__():
+                return (n_batches*self.batch_size,*shp)
+            else: # n==self.__len__()
+                return (self._samples.shape[0],*shp)
+             
+        bidx=0
         if self.y_img_types is None: # one output
             X = None
             for i in RW( range(offset,offset+n_batches) ):
                 Xi = self.__getitem__(i % n_batches)
-                if X is not None:
-                    X = [np.concatenate( (xx,xxi),axis=0 ) for xx,xxi in zip(X,Xi)]
-                else:
-                    X = Xi
+                if X is None:
+                    shps = [out_shape(n_batches,xi.shape[1:]) for xi in Xi] 
+                    X = [np.empty( s ) for s in shps]
+                for ii,xi in enumerate(Xi):
+                    X[ii][bidx:bidx+xi.shape[0]] = xi
+                bidx+=xi.shape[0]
             return X
         else:
             X,Y=None,None
             for i in RW( range(offset,offset+n_batches) ):
                 Xi,Yi = self.__getitem__(i)
-                if X is not None:
-                    X = [np.concatenate( (xx,xxi),axis=0 ) for xx,xxi in zip(X,Xi)]
-                    Y = [np.concatenate( (yy,yyi),axis=0 ) for yy,yyi in zip(Y,Yi)]
-                else:
-                    X = Xi
-                    Y = Yi
+                if X is None:
+                    shps_x = [out_shape(n_batches,xi.shape[1:]) for xi in Xi]
+                    shps_y = [out_shape(n_batches,yi.shape[1:]) for yi in Yi]
+                    X = [np.empty(s) for s in shps_x]
+                    Y = [np.empty(s) for s in shps_y]
+                for ii,xi in enumerate(Xi):
+                    X[ii][bidx:bidx+xi.shape[0]] = xi
+                for ii,yi in enumerate(Yi):
+                    Y[ii][bidx:bidx+yi.shape[0]] = yi   
+                bidx+=xi.shape[0]
             return X,Y
 
     def on_epoch_end(self):
