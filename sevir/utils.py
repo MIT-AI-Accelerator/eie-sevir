@@ -194,22 +194,19 @@ class SEVIRSequence(Sequence):
         n_batches = min(n_batches,self.__len__())
         assert(n_batches>0)
         
-        def out_shape(n_batches,shp):
+        def out_shape(n_batches,shp,batch_size):
             """
             Computes shape for preinitialization
             """
-            if n_batches<self.__len__():
-                return (n_batches*self.batch_size,*shp)
-            else: # n==self.__len__()
-                return (self._samples.shape[0],*shp)
-             
+            return (n_batches*batch_size,*shp)
+
         bidx=0
         if self.y_img_types is None: # one output
             X = None
             for i in RW( range(offset,offset+n_batches) ):
                 Xi = self.__getitem__(i % n_batches)
                 if X is None:
-                    shps = [out_shape(n_batches,xi.shape[1:]) for xi in Xi] 
+                    shps = [out_shape(n_batches,xi.shape[1:],xi.shape[0]) for xi in Xi] 
                     X = [np.empty( s ) for s in shps]
                 for ii,xi in enumerate(Xi):
                     X[ii][bidx:bidx+xi.shape[0]] = xi
@@ -220,8 +217,8 @@ class SEVIRSequence(Sequence):
             for i in RW( range(offset,offset+n_batches) ):
                 Xi,Yi = self.__getitem__(i)
                 if X is None:
-                    shps_x = [out_shape(n_batches,xi.shape[1:]) for xi in Xi]
-                    shps_y = [out_shape(n_batches,yi.shape[1:]) for yi in Yi]
+                    shps_x = [out_shape(n_batches,xi.shape[1:],xi.shape[0]) for xi in Xi]
+                    shps_y = [out_shape(n_batches,yi.shape[1:],yi.shape[0]) for yi in Yi]
                     X = [np.empty(s) for s in shps_x]
                     Y = [np.empty(s) for s in shps_y]
                 for ii,xi in enumerate(Xi):
@@ -251,9 +248,9 @@ class SEVIRSequence(Sequence):
         """
         How many batches to generate per epoch
         """
-        #return int(np.ceil(len(self.x) / float(self.batch_size)))
         if self._samples is not None:
-            max_n = int(np.ceil(self._samples.shape[0] / float(self.batch_size)))
+            # Use floor to avoid sending a batch of < self.batch_size in last batch.   
+            max_n = int(np.floor(self._samples.shape[0] / float(self.batch_size)))
         else:
             max_n = 0
         if self.n_batch_per_epoch is not None:
