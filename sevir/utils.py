@@ -26,7 +26,10 @@ DEFAULT_DATA_HOME = _thisdir+'/../data'
 # NOTE:  The lightning flashes in each from will represent the 5 minutes leading up the
 # the frame's time EXCEPT for the first frame, which will use the same flashes as the second frame
 #  (This will be corrected in a future version of SEVIR so that all frames are consistent)
-FRAME_TIMES = np.arange(-120.0,120.0,5) * 60 # in seconds
+FRAME_TIMES = np.arange(-120.0,125.0,5) * 60 # in seconds
+
+# Record dtypes for reading
+DTYPES={'vil':np.uint8,'vis':np.int16,'ir069':np.int16,'ir107':np.int16,'lght':np.int16}
 
 class SEVIRSequence(Sequence):
     """
@@ -204,10 +207,10 @@ class SEVIRSequence(Sequence):
         if self.y_img_types is None: # one output
             X = None
             for i in RW( range(offset,offset+n_batches) ):
-                Xi = self.__getitem__(i % n_batches)
+                Xi = self.__getitem__(i)
                 if X is None:
                     shps = [out_shape(n_batches,xi.shape[1:],xi.shape[0]) for xi in Xi] 
-                    X = [np.empty( s ) for s in shps]
+                    X = [np.empty( s,dtype=DTYPES[k] ) for s,k in zip(shps,self.x_img_types)]
                 for ii,xi in enumerate(Xi):
                     X[ii][bidx:bidx+xi.shape[0]] = xi
                 bidx+=xi.shape[0]
@@ -219,8 +222,8 @@ class SEVIRSequence(Sequence):
                 if X is None:
                     shps_x = [out_shape(n_batches,xi.shape[1:],xi.shape[0]) for xi in Xi]
                     shps_y = [out_shape(n_batches,yi.shape[1:],yi.shape[0]) for yi in Yi]
-                    X = [np.empty(s) for s in shps_x]
-                    Y = [np.empty(s) for s in shps_y]
+                    X = [np.empty(s,dtype=DTYPES[k]) for s,k in zip(shps_x,self.x_img_types)]
+                    Y = [np.empty(s,dtype=DTYPES[k]) for s,k in zip(shps_y,self.y_img_types)]
                 for ii,xi in enumerate(Xi):
                     X[ii][bidx:bidx+xi.shape[0]] = xi
                 for ii,yi in enumerate(Yi):
@@ -242,7 +245,11 @@ class SEVIRSequence(Sequence):
 
     def __del__(self):
         for f,hf in self._hdf_files.items():
-            hf.close()
+            try:
+                hf.close()
+            except ImportError:
+                pass # okay when python shutting down
+
 
     def __len__(self):
         """
@@ -331,8 +338,11 @@ class SEVIRSequence(Sequence):
         t=data[:,0]
         if t_slice.stop is not None:  # select only one time bin
             if t_slice.stop>0:
-                tm=np.logical_and( t>=FRAME_TIMES[t_slice.stop-1],
-                                   t< FRAME_TIMES[t_slice.stop] )
+                if t_slice.stop < len(FRAME_TIMES):
+                    tm=np.logical_and( t>=FRAME_TIMES[t_slice.stop-1],
+                                       t< FRAME_TIMES[t_slice.stop] )
+                else:
+                    tm=t>=FRAME_TIMES[-1]
             else: # special case:  frame 0 uses lght from frame 1
                 tm=np.logical_and( t>=FRAME_TIMES[0],t<FRAME_TIMES[1] )
             #tm=np.logical_and( (t>=FRAME_TIMES[t_slice],t<FRAME_TIMES[t_slice+1]) )
@@ -348,7 +358,7 @@ class SEVIRSequence(Sequence):
         
         k=np.ravel_multi_index(np.array([y,x,z]),out_size)
         n = np.bincount(k,minlength=np.prod(out_size))
-        return np.reshape(n,out_size).astype(np.float32)[np.newaxis,:]
+        return np.reshape(n,out_size).astype(np.int16)[np.newaxis,:]
          
     
     def _compute_samples(self):
