@@ -1,4 +1,7 @@
 """
+
+LEGACY:  Please use SEVIRGenerator Instead
+
 Input generator for sevir
 """
 
