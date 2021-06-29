@@ -83,7 +83,7 @@ def vis_cmap(encoded=True):
        0.72, 0.76, 0.8 , 0.9 , 1.  ])
     if encoded:
         lev*=1e4
-    nil = cols.pop(0)
+    nil = cols[0]
     under = cols[0]
     over = cols.pop()
     cmap=mpl.colors.ListedColormap(cols)
